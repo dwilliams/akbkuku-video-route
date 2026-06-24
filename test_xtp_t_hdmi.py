@@ -32,7 +32,7 @@ async def reader():
         await device_one.command_view_firmware_version()
         await device_one.command_view_full_firmware_version()
         await device_one.command_view_hdcp_authorization_mode()
-        await device_one.command_set_hdcp_authorization_mode(extron.enums.HDCP_STATUS_ENUM.ERROR)
+        await device_one.command_set_hdcp_authorization_mode(extron.enums.HDCP_STATUS_ENUM.DISABLED)
         await asyncio.sleep(10.0)
 
     # FIXME: Should join all of the tasks

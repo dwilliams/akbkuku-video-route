@@ -6,6 +6,8 @@ import serial_asyncio
 
 from .exceptions import ErrorResponseException, NoResponseReceivedException
 
+from .enums import SIS_ERRORS
+
 class ExtronSerialProtocol(asyncio.Protocol):
     # FIXME: This should have the names/definitions of all of the errors.
     ERRORS = [b'E01', b'E10', b'E12', b'E13', b'E14', b'E17', b'E22']
@@ -65,9 +67,10 @@ class ExtronSerialProtocol(asyncio.Protocol):
         self.logger.debug("All messages: %s", self.messages)
         if(len(self.messages) < 1):
             raise NoResponseReceivedException
-        if(self.messages[0] == self.ERRORS):
-            self.logger.warning("Command %s Failed: %s", command_bytes, self.messages[0])
-            raise ErrorResponseException
+        if(self.messages[0] in SIS_ERRORS):
+            error = SIS_ERRORS(self.messages[0])
+            self.logger.warning("Command %s Failed: %s (%s)", command_bytes, error.name, error.value)
+            raise ErrorResponseException(str(error.name))
         # Return Response
         # FIXME: Pump list (queue?) if there is more than one message
         return self.messages.pop(0)
