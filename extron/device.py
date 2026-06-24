@@ -4,9 +4,11 @@ import asyncio
 import logging
 import serial_asyncio
 
-from .exceptions import ConnectionMethodNotSupportedException, TooManyConnectionMethodsException, NoConnectionSpecifiedException
+from .exceptions import ConnectionMethodNotSupportedException, SetValueFailedException
 
 from .serial_protocol import ExtronSerialProtocol
+
+from .enums import *
 
 # FIXME: Make the device a generic that all the other device types derive from.
 # FIXME: Figure out how to instantiate a device via either serial or telnet.
@@ -66,3 +68,19 @@ class ExtronDevice:
     async def command_view_full_firmware_version(self):
         response = await self.protocol.command(b'*Q')
         self.logger.debug("Response: %s", response)
+
+    async def command_view_hdcp_authorization_mode(self):
+        response = await self.protocol.command(b'\x1BEHDCP\r')
+        self.logger.debug("Response: %s", response)
+
+    async def command_set_hdcp_authorization_mode(self, enabled = HDCP_STATUS_ENUM.DISABLED):
+        # FIXME: These should be wrapped in a try catch at a higher level...
+        command = "\x1BE{:d}HDCP\r".format(int(enabled.value))
+        response = await self.protocol.command(command.encode())
+        self.logger.debug("Response: %s", response)
+        # FIXME: How to check errors?
+        # FIXME: How to validate response?
+        validate = "HdcpE{:d}".format(int(enabled.value))
+        if (response != validate):
+            raise SetValueFailedException
+

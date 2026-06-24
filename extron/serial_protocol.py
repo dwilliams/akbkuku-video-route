@@ -4,9 +4,11 @@ import asyncio
 import logging
 import serial_asyncio
 
+from .exceptions import ErrorResponseException, NoResponseReceivedException
+
 class ExtronSerialProtocol(asyncio.Protocol):
     # FIXME: This should have the names/definitions of all of the errors.
-    ERRORS = [b'E01\r\n', b'E10\r\n', b'E12\r\n', b'E13\r\n', b'E14\r\n', b'E17\r\n', b'E22\r\n']
+    ERRORS = [b'E01', b'E10', b'E12', b'E13', b'E14', b'E17', b'E22']
 
     def connection_made(self, transport):
         self.logger = logging.getLogger(type(self).__name__)
@@ -14,7 +16,8 @@ class ExtronSerialProtocol(asyncio.Protocol):
         self.buffer = bytes()
         self.messages = [] # FIXME: Should this be a queue or fifo?
         self.logger.debug("Port opened: %s", transport)
-        transport.serial.rts = False  # You can manipulate Serial object via transport
+        self.transport.serial.rts = False  # You can manipulate Serial object via transport
+        self.transport.write(b'\n\n\n')
 
     def connection_lost(self, exc):
         self.logger.debug("ExtronSerialProtocol port closed: %s", exc)
@@ -60,8 +63,11 @@ class ExtronSerialProtocol(asyncio.Protocol):
         # Check messages list (queue?) for errors
         self.logger.debug("Num messages received: %s", len(self.messages))
         self.logger.debug("All messages: %s", self.messages)
+        if(len(self.messages) < 1):
+            raise NoResponseReceivedException
         if(self.messages[0] == self.ERRORS):
             self.logger.warning("Command %s Failed: %s", command_bytes, self.messages[0])
+            raise ErrorResponseException
         # Return Response
         # FIXME: Pump list (queue?) if there is more than one message
         return self.messages.pop(0)

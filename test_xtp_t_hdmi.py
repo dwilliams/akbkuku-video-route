@@ -5,6 +5,7 @@ import asyncio
 import logging
 import signal
 
+import extron
 import extron.devices
 
 # FIXME: This is currently used to control the run/sleep loop.
@@ -26,11 +27,13 @@ async def reader():
     # FIXME: Create all the needed coroutines as Tasks
 
     while RUN_LOOP:
-        #await asyncio.sleep(0.1)
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(0.1)
         await device_one.command_view_part_number()
         await device_one.command_view_firmware_version()
         await device_one.command_view_full_firmware_version()
+        await device_one.command_view_hdcp_authorization_mode()
+        await device_one.command_set_hdcp_authorization_mode(extron.enums.HDCP_STATUS_ENUM.ERROR)
+        await asyncio.sleep(10.0)
 
     # FIXME: Should join all of the tasks
 

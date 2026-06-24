@@ -11,3 +11,12 @@ class TooManyConnectionMethodsException(ExtronException):
 
 class NoConnectionSpecifiedException(ExtronException):
     pass
+
+class ErrorResponseException(ExtronException):
+    pass
+
+class NoResponseReceivedException(ExtronException):
+    pass
+
+class SetValueFailedException(ExtronException):
+    pass
